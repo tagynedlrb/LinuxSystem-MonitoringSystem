@@ -15,7 +15,7 @@ int main (void){
 	char loadDataBuf[ONE_LINE] = {0};
 
 	int memories[2][MEMORIES_NUM] = {0};
-	char broker_address[1];
+	char broker_address[100];
 
 	FILE* addrFile;
 	FILE* memFile;

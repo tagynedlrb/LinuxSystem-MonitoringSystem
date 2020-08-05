@@ -35,14 +35,25 @@ int file_scan_certain(FILE* targetFile, char target[]){
 }
 
 
-instruct_mqtt(topic, broker_address, pageFault_value);
+instruct_mqtt(topic, broker_address, pageFault_value){
+      //instruct shell instruction
+                char instruct[100] = "sudo mosquitto_pub -t";
+		 'PAGE_FAULT' -h ";
+
+                strcat(instruct, broker_address);
+                strcat(instruct, " -m '");
+//              strcat(instruct, (char*)pageFault_value);
+
+                system(instruct);
+        //end shell instruction
+}
 
 int main (void){
 	char loadDataBuf[ONE_LINE] = {0};
 
 	int page_faults[2][FAULT_NUM] = {0};
 	int cur_faults[FAULT_NUM] = {0};
-	char broker_address[1];
+	char broker_address[100];
 
 	FILE* addrFile;
 	FILE* vmstatFile;
@@ -86,7 +97,7 @@ int main (void){
 
 		system(instruct);
 	//end shell instruction
-//unabsolute function
+//inabsolute function
 //		instruct_mqtt(topic, broker_address, pageFault_value);
 
 		memcpy(page_faults[PAST], page_faults[PRESENT], 

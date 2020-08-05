@@ -18,7 +18,7 @@ int main (void){
 	int jiffies[2][JIFFIES_NUM] = {0}, totalJiffies;
 	int diffJiffies[JIFFIES_NUM];
 	int idx;
-	char broker_address[1];
+	char broker_address[100];
 
 	FILE* addrFile;
 	FILE* statFile;

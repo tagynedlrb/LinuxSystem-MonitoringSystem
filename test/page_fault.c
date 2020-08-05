@@ -9,7 +9,7 @@
 #define FAULT_NUM 3
 #define PORT 9001
 
-enum page_faults{TOTAL, MAJOR, MINOR} mem_enum;
+enum page_faults{TOTAL, MAJOR, MINOR} page_enum;
 
 int file_scan_certain(FILE* targetFile, char target[]){
 	
@@ -35,14 +35,16 @@ int file_scan_certain(FILE* targetFile, char target[]){
 }
 
 
-instruct_mqtt(topic, broker_address, pageFault_value){
-      //instruct shell instruction
-                char instruct[100] = "sudo mosquitto_pub -t";
-		 'PAGE_FAULT' -h ";
+void instruct_mqtt(char topic[], char broker_address[], char value[]){
+      //start shell instruction
+                char instruct[100] = "sudo mosquitto_pub -t '";
 
+                strcat(instruct, topic);
+                strcat(instruct, "' -h ");
                 strcat(instruct, broker_address);
                 strcat(instruct, " -m '");
-//              strcat(instruct, (char*)pageFault_value);
+                strcat(instruct, value);
+                strcat(instruct, "'");
 
                 system(instruct);
         //end shell instruction
@@ -51,7 +53,7 @@ instruct_mqtt(topic, broker_address, pageFault_value){
 int main (void){
 	char loadDataBuf[ONE_LINE] = {0};
 
-	int page_faults[2][FAULT_NUM] = {0};
+	int page_faults[2][FAULT_NUM] = {'\0'};
 	int cur_faults[FAULT_NUM] = {0};
 	char broker_address[100];
 
@@ -76,29 +78,30 @@ int main (void){
 				-page_faults[PRESENT][MAJOR];
 
 //	for(int i=0;i<3;i++)	//for test
-//	printf("%d \n", page_faults[1][i]);
+//	printf("%d \n", page_faults[PAST][i]);
 
 		for(int i=0; i<FAULT_NUM;i++){
-			if(!page_faults[PAST][i]){	// null check
+			if(page_faults[PAST][i]){	// null check
 				cur_faults[i] = page_faults[PRESENT][i] 
 					- page_faults[PAST][i];
 			}
 		}
-		char pageFault_value[100];	//nominal memory use
 
-//		printf("Page Fault : %s\n", pageFault_value);
+//	for(int i=0;i<3;i++)	//for test
+//	printf("%d \n", cur_faults[i]);
 
-	//instruct shell instruction
-		char instruct[100] = "sudo mosquitto_pub -t 'PAGE_FAULT' -h ";
+		char topic[3][100] = {"mon/page/total",
+				"mon/page/major", "mon/page/minor"};
+		char pageFault_value[3][100];
 
-		strcat(instruct, broker_address);
-		strcat(instruct, " -m '");
-//		strcat(instruct, (char*)pageFault_value);
-
-		system(instruct);
-	//end shell instruction
-//inabsolute function
-//		instruct_mqtt(topic, broker_address, pageFault_value);
+		//print value  and send MQTT
+		for(int i=0; i<FAULT_NUM;i++){
+			sprintf(pageFault_value[i], "%d", cur_faults[i]);
+			printf("Page Fault%d : %s\n", i, pageFault_value[i]);
+			sprintf(pageFault_value[i], "%d", cur_faults[i]);
+			instruct_mqtt(topic[i], broker_address,
+				 pageFault_value[i]);
+		}
 
 		memcpy(page_faults[PAST], page_faults[PRESENT], 
 			sizeof(int)*FAULT_NUM);

@@ -54,7 +54,7 @@ int main (void){
 		printf("Actual Memory usage : %f%%\n", mem_util_act_float);
 
 	//instruct_nom shell instruction
-		char instruct_nom[100] = "sudo mosquitto_pub -t 'MEM_NOM_UTIL' -h ";
+		char instruct_nom[100] = "sudo mosquitto_pub -t 'mon/mem/nom' -h ";
 
 		strcat(instruct_nom, broker_address);
 		strcat(instruct_nom, " -m '");
@@ -64,7 +64,7 @@ int main (void){
 		system(instruct_nom);
 
 	//instruct_act shell instruction
-		char instruct_act[100] = "sudo mosquitto_pub -t 'MEM_ACT_UTIL' -h ";
+		char instruct_act[100] = "sudo mosquitto_pub -t 'mon/mem/act' -h ";
 
 		strcat(instruct_act, broker_address);
 		strcat(instruct_act, " -m '");

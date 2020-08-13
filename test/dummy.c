@@ -15,7 +15,7 @@ int main(void){
 			if(i<100) continue;
 			else{
 				i=0;
-				sleep(1);
+				sleep(2);
 				continue;
 			}
 			return 0;

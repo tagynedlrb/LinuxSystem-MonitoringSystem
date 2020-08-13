@@ -1,7 +1,10 @@
 #include <stdio.h>
 #include <string.h>
+#include <sys/types.h>
+#include <dirent.h>
 #include <unistd.h>
 #include <stdlib.h>
+#include <ctype.h>
 
 #define ONE_LINE 80
 #define PAST 0
@@ -10,13 +13,13 @@
 #define PORT 9001
 
 enum page_faults{TOTAL, MAJOR, MINOR} page_enum;
-enum datas{PID, MIN_FLT, MAJ_FLT, RSS} data_enum;
+enum datas{PID, PATH, MAJ_FLT, RSS} data_enum;
 
 typedef struct{
 	int pid;
-	int min_flt;
-	int maj_flt;
-	int rss;
+	char path[6 + 256 + 5]; // /proc/ + d_name + /stat;
+	unsigned long maj_flt;
+	long rss;
 } listData; 
 
 listData make_cur_data(listData present, listData past){
@@ -24,11 +27,23 @@ listData make_cur_data(listData present, listData past){
 	listData result;
 
 	result.pid = present.pid;
-	result.min_flt = present.min_flt - past.min_flt;
+	strcpy(result.path, present.path);
 	result.maj_flt = present.maj_flt - past.maj_flt;
 	result.rss = present.rss;
 
 	return result;
+}
+
+//function to check if a struct dirent from /proc is a PID folder
+int is_pid_folder(const struct dirent *entry){
+	const char *p;
+
+	for (p = entry->d_name; *p; p++){
+		if(!isdigit(*p))
+			return 0;
+	}
+	
+	return 1;
 }
 
 int file_scan_certain(FILE* targetFile, char target[]){
@@ -78,7 +93,10 @@ int main (void){
 	char broker_address[30] = {0};
 
 	FILE* addrFile;
-	FILE* listFile;
+	FILE* pidFile;
+	DIR *procDir;
+	struct dirent *entry;
+	char path[6 + 256 + 5]; // /proc/ + d_name + /stat
 
 	//get broker IP address
 	addrFile = fopen("./broker_ip.txt", "r"); // open broker_ip
@@ -86,25 +104,61 @@ int main (void){
 
 
 	while(1){
+		
+		//Open /proc directory.
+		procDir = opendir("/proc");
+		if(!procDir){
+			perror("opendir failed");
+			return 1;
+		}
 
-		system("ps -eo pid,min_flt,maj_flt,rss | cat > list_present.txt");
-		listFile = fopen("./list_present.txt", "r");
+		int cnt = 0;
+		//Iterate through all files and folders of /proc.
+		while((entry = readdir(procDir))){
+			//Skip anything that is not a PID folder
+			if(!is_pid_folder(entry))
+				continue;
 
+			//Try to open /proc/[PID]/stat.	
+			snprintf(path, sizeof(path), "/proc/%s/stat", entry->d_name);
+			pidFile = fopen(path, "r");
 
-		//scan all items
+			if(!pidFile){
+				perror(path);
+				continue;
+			}
 
-			//delete first line
-		fscanf(listFile, "%*s %*s %*s %*s");
-		fflush(stdin);
-		for(int i=0; !feof(listFile);i++){
-			fscanf(listFile, "%d %d %d %d",
-				&arrayData[PRESENT][i].pid,
-				&arrayData[PRESENT][i].min_flt,
-				&arrayData[PRESENT][i].maj_flt,
-				&arrayData[PRESENT][i].rss);
-			fflush(stdin);
-		}	//end while
+			//Get PID, process name and number of faults.
+			fscanf(pidFile, "%d %s %*c %*d %*d %*d %*d %*d %*u %*lu %*lu %lu %*lu %*lu %*lu %*ld %*ld %*ld %*ld %*ld %*ld %*llu %*lu %ld", &arrayData[PRESENT][cnt].pid, &arrayData[PRESENT][cnt].path[0], &arrayData[PRESENT][cnt].maj_flt, &arrayData[PRESENT][cnt].rss);
 
+			//Pretty print.
+			printf("%5d %-20s: %lu | %ld\n", arrayData[PRESENT][cnt].pid, arrayData[PRESENT][cnt].path, arrayData[PRESENT][cnt].maj_flt, arrayData[PRESENT][cnt].rss);
+			fclose(pidFile);
+			cnt++;
+		} //end while 
+
+		closedir(procDir);
+		//close procDir
+
+/* This lines are not used in this version
+*		system("ps -eo pid,min_flt,maj_flt,rss | cat > list_present.txt");
+*		listFile = fopen("./list_present.txt", "r");
+*
+*
+*		//scan all items
+*
+*			//delete first line
+*		fscanf(listFile, "%*s %*s %*s %*s");
+*		fflush(stdin);
+*		for(int i=0; !feof(listFile);i++){
+*			fscanf(listFile, "%d %d %d %d",
+*				&arrayData[PRESENT][i].pid,
+*				&arrayData[PRESENT][i].min_flt,
+*				&arrayData[PRESENT][i].maj_flt,
+*				&arrayData[PRESENT][i].rss);
+*			fflush(stdin);
+*		}	//end for
+*/
 		//each for counting => aliased
 		int cnt_past, cnt_pres, cnt_cur = 0;
 		int *a=&cnt_past, *b=&cnt_pres, *c=&cnt_cur;
@@ -137,7 +191,7 @@ int main (void){
 		} //end while
 //printf("out\n");
 		char topic[4][100] = {"mon/list/pid",
-				"mon/list/min_flt", "mon/list/maj_flt",
+				"mon/list/path", "mon/list/maj_flt",
 				"mon/list/rss"};
 
 	printf("gonna in!!!\n");
@@ -146,9 +200,9 @@ int main (void){
 	printf("%d", cur_Data[i].pid);	
                 	char instruct[4][200];
 			sprintf( instruct[PID], "sudo mosquitto_pub -t '%s' -h %s -m '%d'", topic[PID], broker_address, cur_Data[i].pid);
-			sprintf( instruct[MIN_FLT], "sudo mosquitto_pub -t '%s' -h %s -m '%d'", topic[MIN_FLT], broker_address, cur_Data[i].min_flt);
-			sprintf( instruct[MAJ_FLT], "sudo mosquitto_pub -t '%s' -h %s -m '%d'", topic[MAJ_FLT], broker_address, cur_Data[i].maj_flt);
-			sprintf( instruct[RSS], "sudo mosquitto_pub -t '%s' -h %s -m '%d'", topic[RSS], broker_address, cur_Data[i].rss);
+			sprintf( instruct[PATH], "sudo mosquitto_pub -t '%s' -h %s -m '%s'", topic[PATH], broker_address, cur_Data[i].path);
+			sprintf( instruct[MAJ_FLT], "sudo mosquitto_pub -t '%s' -h %s -m '%lu'", topic[MAJ_FLT], broker_address, cur_Data[i].maj_flt);
+			sprintf( instruct[RSS], "sudo mosquitto_pub -t '%s' -h %s -m '%ld'", topic[RSS], broker_address, cur_Data[i].rss);
 
 printf("%s", instruct[0]); //for test
 
@@ -164,9 +218,6 @@ printf("%s", instruct[0]); //for test
 	}
 	fclose(addrFile);
 	//close addrFile
-
-	fclose(listFile);
-	//close listFile	
 
 	return 0;
 }

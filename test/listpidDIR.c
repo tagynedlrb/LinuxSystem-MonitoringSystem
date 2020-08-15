@@ -129,7 +129,8 @@ int main (void){
 			}
 
 			//Get PID, process name and number of faults.
-			fscanf(pidFile, "%d %s %*c %*d %*d %*d %*d %*d %*u %*lu %*lu %lu %*lu %*lu %*lu %*ld %*ld %*ld %*ld %*ld %*ld %*llu %*lu %ld", &arrayData[PRESENT][cnt].pid, &arrayData[PRESENT][cnt].path[0], &arrayData[PRESENT][cnt].maj_flt, &arrayData[PRESENT][cnt].rss);
+/*By gnu_scanf format, if using wild card(*), skip long || %*lu => %*u */
+			fscanf(pidFile, "%d %s %*c %*d %*d %*d %*d %*d %*u %*u %*u %lu %*u %*u %*u %*d %*d %*d %*d %*d %*d %*u %*u %ld", &arrayData[PRESENT][cnt].pid, &arrayData[PRESENT][cnt].path[0], &arrayData[PRESENT][cnt].maj_flt, &arrayData[PRESENT][cnt].rss);
 
 			//Pretty print.
 			printf("%5d %-20s: %lu | %ld\n", arrayData[PRESENT][cnt].pid, arrayData[PRESENT][cnt].path, arrayData[PRESENT][cnt].maj_flt, arrayData[PRESENT][cnt].rss);
@@ -186,25 +187,21 @@ int main (void){
 				|| (arrayData[PRESENT][*b].pid == 0)){
 				flag = 0; *a=0; *b=0; *c=0;
 			}
-//printf("^^%d %d %d^^\n", *a, *b, *c);
-//printf("== %d %d==\n", arrayData[PAST][*a].pid, arrayData[PRESENT][*b].pid);
 		} //end while
-//printf("out\n");
+
 		char topic[4][100] = {"mon/list/pid",
 				"mon/list/path", "mon/list/maj_flt",
 				"mon/list/rss"};
 
-	printf("gonna in!!!\n");
 		//print value and send MQTT
 		for(int i=0; cur_Data[i].pid != 0;i++){
-	printf("%d", cur_Data[i].pid);	
+
                 	char instruct[4][200];
 			sprintf( instruct[PID], "sudo mosquitto_pub -t '%s' -h %s -m '%d'", topic[PID], broker_address, cur_Data[i].pid);
 			sprintf( instruct[PATH], "sudo mosquitto_pub -t '%s' -h %s -m '%s'", topic[PATH], broker_address, cur_Data[i].path);
 			sprintf( instruct[MAJ_FLT], "sudo mosquitto_pub -t '%s' -h %s -m '%lu'", topic[MAJ_FLT], broker_address, cur_Data[i].maj_flt);
 			sprintf( instruct[RSS], "sudo mosquitto_pub -t '%s' -h %s -m '%ld'", topic[RSS], broker_address, cur_Data[i].rss);
 
-printf("%s", instruct[0]); //for test
 
 			//shell instruction : mqtt publish
 			for(int j=0; j<4; j++)

@@ -185,11 +185,11 @@ int main (void){
 		while(flag){
 			if(arrayData[PAST][*a].pid == 
 				arrayData[PRESENT][*b].pid){
-				if(arrayData[PAST][*a].maj_flt<arrayData[PRESENT][*b].maj_flt){
+	//			if(arrayData[PAST][*a].maj_flt<arrayData[PRESENT][*b].maj_flt){
 					cur_Data[*c] = make_cur_data(
 					arrayData[PRESENT][*b], arrayData[PAST][*a]);
 					*c=*c+1;
-				} //end inner if
+	//			} //end inner if
 				*a=*a+1; *b=*b+1;
 			} else if(arrayData[PAST][*a].pid > 
 					arrayData[PRESENT][*b].pid){
@@ -222,8 +222,9 @@ int main (void){
 
 
 			//shell instruction : mqtt publish
-			for(int j=0; j<DATA_NUM; j++)
-				system(instruct[j]);
+//			for(int j=0; j<DATA_NUM; j++)
+//				system(instruct[j]);
+	/*for test*/			system(instruct[0]);
 		} //end for
 
 		memcpy(arrayData[PAST], arrayData[PRESENT], 

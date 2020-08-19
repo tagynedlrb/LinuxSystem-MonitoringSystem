@@ -112,6 +112,7 @@ int main (void){
 
 
 	while(1){
+
 		
 		//Open /proc directory.
 		procDir = opendir("/proc");
@@ -150,7 +151,8 @@ int main (void){
 		 (utime + stime)/(uptime-(starttime/sysconf(_SC_CLK_TCK)));	
 
 			//Pretty print.
-			printf("%5d %-20s: %.2f | %lu | %ld\n", arrayData[PRESENT][cnt].pid, arrayData[PRESENT][cnt].path, arrayData[PRESENT][cnt].cpu, arrayData[PRESENT][cnt].maj_flt, arrayData[PRESENT][cnt].rss);
+			printf("%5d %-20s: %f | %lu | %ld\n", arrayData[PRESENT][cnt].pid, arrayData[PRESENT][cnt].path, arrayData[PRESENT][cnt].cpu, arrayData[PRESENT][cnt].maj_flt, arrayData[PRESENT][cnt].rss);
+			fclose(uptimeFile);
 			fclose(pidFile);
 			cnt++;
 		} //end while 

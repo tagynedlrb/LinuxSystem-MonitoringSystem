@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <sys/types.h>
+#include <sys/param.h>
 #include <dirent.h>
 #include <unistd.h>
 #include <stdlib.h>
@@ -9,15 +10,16 @@
 #define ONE_LINE 80
 #define PAST 0
 #define PRESENT 1
-#define DATA_NUM 200
+#define DATA_NUM 5
+#define MAX_ROW 200
 #define PORT 9001
 
-enum page_faults{TOTAL, MAJOR, MINOR} page_enum;
-enum datas{PID, PATH, MAJ_FLT, RSS} data_enum;
+enum datas{PID, PATH, CPU, MAJ_FLT, RSS} data_enum;
 
 typedef struct{
 	int pid;
 	char path[6 + 256 + 5]; // /proc/ + d_name + /stat;
+	float cpu;
 	unsigned long maj_flt;
 	long rss;
 } listData; 
@@ -28,6 +30,7 @@ listData make_cur_data(listData present, listData past){
 
 	result.pid = present.pid;
 	strcpy(result.path, present.path);
+	result.cpu = present.cpu;
 	result.maj_flt = present.maj_flt - past.maj_flt;
 	result.rss = present.rss;
 
@@ -88,15 +91,20 @@ void instruct_mqtt(char topic[], char broker_address[], char value[]){
 int main (void){
 	char loadDataBuf[ONE_LINE] = {0};
 
-	listData arrayData[2][DATA_NUM] = {0}; //data array (PAST,PRESENT)
-	listData cur_Data[DATA_NUM] = {0};
+	listData arrayData[2][MAX_ROW] = {0}; //data array (PAST,PRESENT)
+	listData cur_Data[MAX_ROW] = {0};
 	char broker_address[30] = {0};
 
 	FILE* addrFile;
 	FILE* pidFile;
+	FILE* uptimeFile;
 	DIR *procDir;
 	struct dirent *entry;
 	char path[6 + 256 + 5]; // /proc/ + d_name + /stat
+	unsigned long utime = 0, stime = 0;
+	unsigned long long starttime = 0;
+	float uptime = 0;
+	
 
 	//get broker IP address
 	addrFile = fopen("./broker_ip.txt", "r"); // open broker_ip
@@ -104,6 +112,7 @@ int main (void){
 
 
 	while(1){
+
 		
 		//Open /proc directory.
 		procDir = opendir("/proc");
@@ -130,10 +139,20 @@ int main (void){
 
 			//Get PID, process name and number of faults.
 /*By gnu_scanf format, if using wild card(*), skip long || %*lu => %*u */
-			fscanf(pidFile, "%d %s %*c %*d %*d %*d %*d %*d %*u %*u %*u %lu %*u %*u %*u %*d %*d %*d %*d %*d %*d %*u %*u %ld", &arrayData[PRESENT][cnt].pid, &arrayData[PRESENT][cnt].path[0], &arrayData[PRESENT][cnt].maj_flt, &arrayData[PRESENT][cnt].rss);
+			fscanf(pidFile, "%d %s %*c %*d %*d %*d %*d %*d %*u %*u %*u %lu %*u %lu %lu %*d %*d %*d %*d %*d %*d %llu %*u %ld", &arrayData[PRESENT][cnt].pid, &arrayData[PRESENT][cnt].path[0], &arrayData[PRESENT][cnt].maj_flt, &utime, &stime, &starttime, &arrayData[PRESENT][cnt].rss);
+
+			//uptime from /proc/uptime, first element
+			uptimeFile = fopen("/proc/uptime", "r");
+			fscanf(uptimeFile, "%f", &uptime);
+
+			//Hertz => sysconf(_SC_CLK_TCK) <sys.param.h>
+			//make Cpu Util
+			arrayData[PRESENT][cnt].cpu =
+		 (utime + stime)/(uptime-(starttime/sysconf(_SC_CLK_TCK)));	
 
 			//Pretty print.
-			printf("%5d %-20s: %lu | %ld\n", arrayData[PRESENT][cnt].pid, arrayData[PRESENT][cnt].path, arrayData[PRESENT][cnt].maj_flt, arrayData[PRESENT][cnt].rss);
+			printf("%5d %-20s: %f | %lu | %ld\n", arrayData[PRESENT][cnt].pid, arrayData[PRESENT][cnt].path, arrayData[PRESENT][cnt].cpu, arrayData[PRESENT][cnt].maj_flt, arrayData[PRESENT][cnt].rss);
+			fclose(uptimeFile);
 			fclose(pidFile);
 			cnt++;
 		} //end while 
@@ -168,11 +187,11 @@ int main (void){
 		while(flag){
 			if(arrayData[PAST][*a].pid == 
 				arrayData[PRESENT][*b].pid){
-				if(arrayData[PAST][*a].maj_flt<arrayData[PRESENT][*b].maj_flt){
+	//			if(arrayData[PAST][*a].maj_flt<arrayData[PRESENT][*b].maj_flt){
 					cur_Data[*c] = make_cur_data(
 					arrayData[PRESENT][*b], arrayData[PAST][*a]);
 					*c=*c+1;
-				} //end inner if
+	//			} //end inner if
 				*a=*a+1; *b=*b+1;
 			} else if(arrayData[PAST][*a].pid > 
 					arrayData[PRESENT][*b].pid){
@@ -189,28 +208,26 @@ int main (void){
 			}
 		} //end while
 
-		char topic[4][100] = {"mon/list/pid",
+		char topic[DATA_NUM+1][100] = {"mon/list/pid",
 				"mon/list/path", "mon/list/maj_flt",
-				"mon/list/rss"};
+				"mon/list/cpu", "mon/list/rss",
+				"mon/listall"};
 
 		//print value and send MQTT
 		for(int i=0; cur_Data[i].pid != 0;i++){
 
-                	char instruct[4][200];
-			sprintf( instruct[PID], "sudo mosquitto_pub -t '%s' -h %s -m '%d'", topic[PID], broker_address, cur_Data[i].pid);
-			sprintf( instruct[PATH], "sudo mosquitto_pub -t '%s' -h %s -m '%s'", topic[PATH], broker_address, cur_Data[i].path);
-			sprintf( instruct[MAJ_FLT], "sudo mosquitto_pub -t '%s' -h %s -m '%lu'", topic[MAJ_FLT], broker_address, cur_Data[i].maj_flt);
-			sprintf( instruct[RSS], "sudo mosquitto_pub -t '%s' -h %s -m '%ld'", topic[RSS], broker_address, cur_Data[i].rss);
+                	char instruct[DATA_NUM+1][500];
+			sprintf( instruct[5], "sudo mosquitto_pub -t '%s' -h %s -m '%d %s %lu %f %ld'", topic[5], broker_address, cur_Data[i].pid, cur_Data[i].path, cur_Data[i].maj_flt, cur_Data[i].cpu, cur_Data[i].rss);
 
 
 			//shell instruction : mqtt publish
-//			for(int j=0; j<4; j++)
+//			for(int j=0; j<DATA_NUM; j++)
 //				system(instruct[j]);
-				system(instruct[0]);
+	/*for test*/			system(instruct[5]);
 		} //end for
 
 		memcpy(arrayData[PAST], arrayData[PRESENT], 
-			sizeof(listData)*DATA_NUM);
+			sizeof(listData)*MAX_ROW);
 
 		sleep(1);
 	}

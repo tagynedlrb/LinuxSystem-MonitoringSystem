@@ -7,9 +7,9 @@ int main(int argc, char *argv[]){
 	mongoc_init();
 
 	client = mongoc_client_new(
-	"mongodb+srv://mkrice:minkyung0615@cluster0.mongodb.net/test?retryWrites=true&w=majority"
+	"mongodb+srv://tagynedlrb:672dlrb@rbf@cluster0.xiyoy.mongodb.net/test?retryWrites=true&w=majority"
 	);
-	database = mongoc_client_get_database (client, "subscribers");
+	database = mongoc_client_get_database (client, "test");
 
 	mongoc_database_destroy(database);
 	mongoc_client_destroy(client);

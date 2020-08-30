@@ -55,8 +55,8 @@ main (int argc, char *argv[])
    /*
     * Get a handle on the database "db_name" and collection "coll_name"
     */
-   database = mongoc_client_get_database (client, "db_name");
-   collection = mongoc_client_get_collection (client, "db_name", "coll_name");
+   database = mongoc_client_get_database (client, "test");
+   collection = mongoc_client_get_collection (client, "test", "test0");
 
    /*
     * Do work. This example pings the database, prints the result as JSON and

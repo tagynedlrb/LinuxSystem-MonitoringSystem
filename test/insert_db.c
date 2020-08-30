@@ -14,7 +14,7 @@ main (int   argc,
 
     mongoc_init ();
 
-    client = mongoc_client_new ("mongodb://localhost:27017/?appname=insert-example");
+    client = mongoc_client_new ("mongodb://localhost:63342/?appname=insert-example");
     collection = mongoc_client_get_collection (client, "mydb", "mycoll");
 
     doc = bson_new ();

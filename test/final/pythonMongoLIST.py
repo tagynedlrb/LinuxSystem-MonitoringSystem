@@ -11,7 +11,7 @@ import json
 
 client = pymongo.MongoClient('mongodb+srv://tagynedlrb:672dlrb%40rbf@cluster0.xiyoy.mongodb.net/moniter?retryWrites=true&w=majority')
 db = client['moniter']
-collection = db['CPU']
+collection = db['LIST']
 
 #CALL BACK -> Broker Connect
 def on_connect(client, userdata, flags, rc):
@@ -35,7 +35,7 @@ def on_message(client, userdata, msg):
 	post = json.loads(str(msg.payload.decode("utf-8", "ignore")))
 
 	#INSERT IN DB
-	inserted = collection.insert_one(post)
+	inserted = collection.insert_many(post)
 
 # Create New Client
 client = mqtt.Client()
@@ -49,8 +49,8 @@ client.on_message = on_message
 # address : localhost, port: 1883  connect
 #INPUT YOUR BROKER IP AD PROT NUM
 #client.connect('54.180.90.198', 1883)
-client.connect('192.168.25.2', 1883)
+client.connect('192.168.0.25', 1883)
 
 # INPUT Subscribe Topic
-client.subscribe('mon/cpu', 1)
+client.subscribe('mon/list', 1)
 client.loop_forever()

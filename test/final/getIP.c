@@ -5,6 +5,7 @@ void getIP(char* ipstr){
         //char ipstr[40];
         int s;
 
+	//"enp0s3 needs to be changed differs by its type when ifconfig
         s = socket(AF_INET, SOCK_DGRAM, 0);
         strncpy(ifr.ifr_name, "enp0s3", IFNAMSIZ);
 

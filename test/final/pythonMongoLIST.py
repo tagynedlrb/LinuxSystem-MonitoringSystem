@@ -32,10 +32,10 @@ def on_subscribe(client, userdata, mid, granted_qos):
 def on_message(client, userdata, msg):
 	#print messege
 	print(str(msg.payload.decode("utf-8")))
-	post = json.loads(str(msg.payload.decode("utf-8", "ignore")))
+	post = json.loads('{\"list\" : [' + str(msg.payload.decode("utf-8", "ignore")) + ']}')
 
 	#INSERT IN DB
-	inserted = collection.insert_many(post)
+	inserted = collection.insert_many(post['list'])
 
 # Create New Client
 client = mqtt.Client()
@@ -49,7 +49,7 @@ client.on_message = on_message
 # address : localhost, port: 1883  connect
 #INPUT YOUR BROKER IP AD PROT NUM
 #client.connect('54.180.90.198', 1883)
-client.connect('192.168.0.25', 1883)
+client.connect('192.168.25.2', 1883)
 
 # INPUT Subscribe Topic
 client.subscribe('mon/list', 1)

@@ -5,6 +5,7 @@ import paho.mqtt.client as mqtt
 import pymongo
 from pymongo import MongoClient
 import json
+import socket
 
 #MongoDB MongoClient connect
 #EXAMPLE ID : geumbi PASSWORD: rodutls179 , INPUT YOUR ID,PS 
@@ -37,6 +38,15 @@ def on_message(client, userdata, msg):
 	#INSERT IN DB
 	inserted = collection.insert_one(post)
 
+        #FIND LASTEST DATA
+        for doc in collection.find().sort([('_id', -1)]).limit(1):
+            print (doc)
+	    IP=doc.get("IP")
+            nom_mem= doc.get("nom_mem")
+            act_mem=doc.get("act_mem")
+            client.publish("mon/get/mem/nom",socket.inet_aton(IP).hex() + nom_mem)
+            client.publish("mon/get/mem/act",socket.inet_aton(IP).hex() + act_mem)
+
 # Create New Client
 client = mqtt.Client()
 
@@ -48,8 +58,8 @@ client.on_message = on_message
 
 # address : localhost, port: 1883  connect
 #INPUT YOUR BROKER IP AD PROT NUM
-#client.connect('54.180.90.198', 1883)
-client.connect('192.168.0.25', 1883)
+client.connect('54.180.90.198', 1883)
+#client.connect('192.168.0.25', 1883)
 
 # INPUT Subscribe Topic
 client.subscribe('mon/mem', 1)

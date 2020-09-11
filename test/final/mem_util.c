@@ -46,7 +46,7 @@ int main (void){
 		//make instruction
                 char instruct[400] = {0};
 
-                sprintf(instruct, "sudo mosquitto_pub -t 'mon/mem' -h %s -m '{ \"IP\" : \"%s\", \"timestamp\" : \"%d\", \"nom_mem\" : \"%f\", \"act_mem\" : \"%f\" }'", broker_address, hostIP, (int)time(NULL), nom_mem, act_mem);
+                sprintf(instruct, "sudo mosquitto_pub -t 'mon/storeDB/MEM' -h %s -m '{ \"IP\" : \"%s\", \"timestamp\" : %d, \"nom_mem\" : %f, \"act_mem\" : %f }'", broker_address, hostIP, (int)time(NULL), nom_mem, act_mem);
 
                 printf("%s\n", instruct);
 

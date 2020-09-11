@@ -49,7 +49,7 @@ int main (void){
 		//make instruction
 		char instruct[400] = {0};
 
-		sprintf(instruct, "sudo mosquitto_pub -t 'mon/cpu' -h %s -m '{ \"IP\" : \"%s\", \"timestamp\" : \"%d\", \"cpu_usage\" : \"%f\" }'", broker_address, hostIP, (int)time(NULL), cpu_util);
+		sprintf(instruct, "sudo mosquitto_pub -t 'mon/storeDB/CPU' -h %s -m '{ \"IP\" : \"%s\", \"timestamp\" : %d, \"cpu_usage\" : %f }'", broker_address, hostIP, (int)time(NULL), cpu_util);
 
 		printf("%s\n", instruct);
 		system(instruct);	

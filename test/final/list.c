@@ -159,7 +159,7 @@ int main (void){
 
 		char instruct[50000] = {0};
 
-		sprintf(instruct, "sudo mosquitto_pub -t 'mon/list' -h %s -m '", broker_address);
+		sprintf(instruct, "sudo mosquitto_pub -t 'mon/storeDB/LIST' -h %s -m '{\"list\" : [", broker_address);
 
 		int timestamp = (int)time(NULL);
 
@@ -169,12 +169,12 @@ int main (void){
 				strcat(instruct, ", ");
 
                 	char temp[500] = {0};
-			sprintf(temp, "{ \"IP\" : \"%s\", \"timestamp\" : \"%d\", \"pid\" : \"%d\", \"path\" : \"%s\", \"maj_flt\" : \"%lu\", \"cpu_usage\" : \"%f\", \"rss\" : \"%ld\" }", hostIP, timestamp, cur_Data[i].pid, cur_Data[i].path, cur_Data[i].maj_flt, cur_Data[i].cpu, cur_Data[i].rss);
+			sprintf(temp, "{ \"IP\" : \"%s\", \"timestamp\" : %d, \"pid\" : %d, \"path\" : \"%s\", \"maj_flt\" : %lu, \"cpu_usage\" : %f, \"rss\" : %ld }", hostIP, timestamp, cur_Data[i].pid, cur_Data[i].path, cur_Data[i].maj_flt, cur_Data[i].cpu, cur_Data[i].rss);
 
 			strcat(instruct, temp);
 
 		} //end for
-		strcat(instruct, "'");	//end of instruct
+		strcat(instruct, "]}'");	//end of instruct
 
 		//shell instruction : mqtt publish
 		printf("%s\n", instruct);

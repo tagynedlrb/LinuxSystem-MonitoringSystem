@@ -5,6 +5,7 @@ import paho.mqtt.client as mqtt
 import pymongo
 from pymongo import MongoClient
 import json
+import socket
 
 #MongoDB MongoClient connect
 #EXAMPLE ID : geumbi PASSWORD: rodutls179 , INPUT YOUR ID,PS 
@@ -32,10 +33,21 @@ def on_subscribe(client, userdata, mid, granted_qos):
 def on_message(client, userdata, msg):
 	#print messege
 	print(str(msg.payload.decode("utf-8")))
-	post = json.loads('{\"list\" : [' + str(msg.payload.decode("utf-8", "ignore")) + ']}')
+	post = json.loads(str(msg.payload.decode("utf-8", "ignore")))
 
 	#INSERT IN DB
 	inserted = collection.insert_many(post['list'])
+
+        #FIND LASTEST DATA
+        for doc in collection.find().sort([('_id', -1)]).limit(1):
+#               print (doc)
+                IP=doc.get("IP")
+                cpu_num=doc.get("cpu_usage")
+
+                print (socket.inet_aton(IP).hex() + cpu_num)
+
+                client.publish("mon/get/cpu",socket.inet_aton(IP).hex() + cpu_num)
+
 
 # Create New Client
 client = mqtt.Client()

@@ -16,6 +16,7 @@ from publish_Data_from_DB import publish_Data_Handler
 
 # MQTT Settings
 MQTT_Broker = "192.168.25.2"
+#MQTT_Broker = "54.180.90.198"
 MQTT_Port = 1883
 MQTT_Topic_storeDB = "mon/storeDB/#"
 

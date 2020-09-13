@@ -106,21 +106,28 @@ def IO_Data_Query_Handler(IP):
 # Function to save LIST to DB Table
 def LIST_Data_Query_Handler(IP):
 
-        cur_IP = IP
+	cur_IP = IP
 
-        #FIND LASTEST DATA
-        dbObj = DatabaseManager()
-        sql_query = "select * from LIST_Data where IP=? and timestamp=(select max(timestamp) from LIST_Data where IP=?)"
-        args=(cur_IP, cur_IP)
-        dbObj.cur.execute(sql_query, args)
-        rows = dbObj.cur.fetchall()
-        result = repr('|'.join(map(str,rows)))
-        print(result)
+	#FIND LASTEST DATA
+	dbObj = DatabaseManager()
+	sql_query = "select * from LIST_Data where IP=? and timestamp=(select max(timestamp) from LIST_Data where IP=?)"
+	args=(cur_IP, cur_IP)
+	dbObj.cur.execute(sql_query, args)
+	rows = dbObj.cur.fetchall()
+	payload = []
+	content = {}
+	for result in rows :
+		content = {'PID' : result[4], 'Page Fault' : str(result[5]), 'Cpu Usage' : str(result[6]), 'Rss' : str(result[7])}
+		payload.append(content)
+		content = {}
+	c = ','.join(map(str, payload))
 
-        del dbObj
+	print(c)
 
-        #return result
-        return result
+	del dbObj
+
+	#return c
+	return c
 
 
 #===============================================================

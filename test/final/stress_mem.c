@@ -59,7 +59,7 @@ int main(void){
 		cpStr[intTmp2] = (char*)malloc(intMemSize);
 		//write 'K' on all allocated bytes(CPU rate 100% when activated
 
-//		for(intTmp=0; intTmp<intMemSize; ++intTmp)*((char*)cpStr+intTmp)='K';
+		for(intTmp=0; intTmp<intMemSize; ++intTmp)*((char*)cpStr+intTmp)='K';
 
 		printf("Child %d, Memory Allocate : %d\n", getpid(), intTmp2);
 		sleep(1);

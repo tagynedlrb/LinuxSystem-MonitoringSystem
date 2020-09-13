@@ -65,12 +65,18 @@ def on_message(mosq, obj, msg):
                 print ("CPU_Data(Hex): " + pub_data)
                 client.publish("mon/getDB/CPU", pub_data)
         elif msg.topic == "mon/storeDB/MEM" :
+                pub_data = str(hexIP) + repr(result[0])
                 pub_data2 = str(hexIP) + repr(result[1])
                 print ("Got recent MEM Data from Database.")
                 print ("MEM_Data1(Hex): " + pub_data)
                 print ("MEM_Data2(Hex): " + pub_data2)
                 client.publish("mon/getDB/MEM/nom", pub_data)
                 client.publish("mon/getDB/MEM/act", pub_data2)
+        elif msg.topic == "mon/storeDB/SWAP" :
+                pub_data = str(hexIP) + repr(result)
+                print ("Got recent SWAP Data from Database.")
+                print ("SWAP_Data(Hex): " + pub_data)
+                client.publish("mon/getDB/SWAP", pub_data)
         elif msg.topic == "mon/storeDB/LIST" :
                 print ("Got recent LIST Data from Database.")
                 pub_data = str(hexIP) + result

@@ -70,6 +70,21 @@ def MEM_Data_Query_Handler(IP):
         #return tuple [nom_mem, act_mem]
         return result
 
+# Function to save SWAP to DB Table
+def SWAP_Data_Query_Handler(IP):
+
+        cur_IP = IP
+
+        #FIND LASTEST DATA
+        dbObj = DatabaseManager()
+        sql_query = "select * from SWAP_Data where IP=? and timestamp=(select max(timestamp) from SWAP_Data where IP=?)"
+        args=(cur_IP, cur_IP)
+        dbObj.cur.execute(sql_query, args)
+        row = dbObj.cur.fetchone()
+        del dbObj
+
+        #return swap_usage
+        return row[3]
 
 # Function to save LIST to DB Table
 def LIST_Data_Query_Handler(IP):
@@ -99,6 +114,8 @@ def publish_Data_Handler(Topic, IP):
                 return CPU_Data_Query_Handler(IP)
         elif Topic == "mon/storeDB/MEM":
                 return MEM_Data_Query_Handler(IP)
+        elif Topic == "mon/storeDB/SWAP":
+                return SWAP_Data_Query_Handler(IP)
         elif Topic == "mon/storeDB/LIST":
                 return LIST_Data_Query_Handler(IP)
 

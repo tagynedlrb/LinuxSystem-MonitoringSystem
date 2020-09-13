@@ -33,6 +33,14 @@ create table MEM_Data (
   act_mem real
 );
 
+drop table if exists SWAP_Data ;
+create table SWAP_Data (
+  id integer primary key autoincrement,
+  IP text,
+  timestamp integer,
+  swap_usage real
+);
+
 drop table if exists LIST_Data ;
 create table LIST_Data (
   id integer primary key autoincrement,

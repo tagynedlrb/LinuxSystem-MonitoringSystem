@@ -83,6 +83,22 @@ def SWAP_Data_Handler(jsonData):
 	print ("Inserted SWAP Data into Database.")
 	print ("")
 
+# Function to save IO to DB Table
+def IO_Data_Handler(jsonData):
+        #Parse Data
+        json_Dict = json.loads(jsonData)
+        IP = json_Dict['IP']
+        timestamp = json_Dict['timestamp']
+        io_read = json_Dict['io_read']
+        io_write = json_Dict['io_write']
+
+        #Push into DB Table
+        dbObj = DatabaseManager()
+        dbObj.add_del_update_db_record("insert into IO_Data (IP, timestamp, io_read, io_write) values (?,?,?,?)",[IP, timestamp, io_read, io_write])
+        del dbObj
+        print ("Inserted IO Data into Database.")
+        print ("")
+
 # Function to save LIST to DB Table
 def LIST_Data_Handler(jsonData):
         jsonArray = json.loads(jsonData)
@@ -111,6 +127,8 @@ def store_Data_Handler(Topic, jsonData):
                 MEM_Data_Handler(jsonData)
         elif Topic == "mon/storeDB/SWAP":
                 SWAP_Data_Handler(jsonData)
+        elif Topic == "mon/storeDB/IO":
+                IO_Data_Handler(jsonData)
         elif Topic == "mon/storeDB/LIST":
                 LIST_Data_Handler(jsonData)
 

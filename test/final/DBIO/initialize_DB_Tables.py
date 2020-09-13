@@ -41,6 +41,15 @@ create table SWAP_Data (
   swap_usage real
 );
 
+drop table if exists IO_Data ;
+create table IO_Data (
+ id integer primary key autoincrement,
+ IP text,
+ timestamp integer, 
+ io_read real,
+ io_write real
+);
+
 drop table if exists LIST_Data ;
 create table LIST_Data (
   id integer primary key autoincrement,

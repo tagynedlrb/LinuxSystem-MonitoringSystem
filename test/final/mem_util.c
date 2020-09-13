@@ -9,7 +9,7 @@
 #define ONE_LINE 80
 #define PAST 0
 #define PRESENT 1
-#define MEMORIES_NUM 4
+#define MEMORIES_NUM 3
 #define PORT 9001
 
 enum memories{TOTAL, FREE, AVAILABLE} mem_enum;

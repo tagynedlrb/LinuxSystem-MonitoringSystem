@@ -14,7 +14,7 @@
 #define PAST 0
 #define PRESENT 1
 #define DATA_NUM 5
-#define MAX_ROW 200
+#define MAX_ROW 2000
 #define PORT 9001
 
 enum datas{PID, PATH, CPU, MAJ_FLT, RSS} data_enum;
@@ -157,7 +157,8 @@ int main (void){
 			}
 		} //end while
 
-		char instruct[50000] = {0};
+//		char instruct[500000] = {0};
+		char* instruct = (char*)malloc(sizeof(char)*50000);
 
 		sprintf(instruct, "sudo mosquitto_pub -t 'mon/storeDB/LIST' -h %s -m '{\"list\" : [", broker_address);
 
@@ -179,6 +180,8 @@ int main (void){
 		//shell instruction : mqtt publish
 		printf("%s\n", instruct);
 		system(instruct);
+
+		free(instruct);
 
 printf("=====================\n");
 		memcpy(arrayData[PAST], arrayData[PRESENT], 
